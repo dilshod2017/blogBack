@@ -7,11 +7,6 @@ using LinqToDB.Data;
 
 namespace blogBack.DB
 {
-    public class test
-    {
-        public int id { get; set; }
-        public string testing{ get; set; }  
-    }
     public class Database : DataConnection
     {
         public Database() : base("local")
@@ -19,6 +14,11 @@ namespace blogBack.DB
             
         }
 
-        public ITable<test> Tests => GetTable<test>();
-    }
+        public ITable<Blog> Blog => GetTable<Blog>();
+        public ITable<Post> Posts => GetTable<Post>();
+        public ITable<Text> Texts => GetTable<Text>();
+        public ITable<Image> Images => GetTable<Image>();
+        public ITable<Style> Styles => GetTable<Style>();
+        public ITable<Data> DataList => GetTable<Data>();
+     }
 }

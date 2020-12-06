@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using blogBack.DB;
+using LinqToDB;
 
 namespace blogBack.Controllers
 {
@@ -23,7 +24,7 @@ namespace blogBack.Controllers
         [HttpGet]
         public IEnumerable<string> Get()
         {
-            return _db.Tests.Select(x => x.testing);
+            return _db.Posts.Select(x => x.Title);
         }
     }
 }
