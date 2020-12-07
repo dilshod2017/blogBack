@@ -7,7 +7,7 @@ using LinqToDB.Mapping;
 
 namespace blogBack.DB
 {
-    public class Style
+    public class Style : IStyle
     {
         [PrimaryKey, Identity] 
         public int StyleId { get; set; }
@@ -17,30 +17,37 @@ namespace blogBack.DB
         public int TextId { get; set; }
         public int PostId { get; set; }
     }    
-    public class Text
+    public class Text : IText
     {
         [PrimaryKey, Identity] 
         public int TextId { get; set; }
         public string TextBody { get; set; }
     }
-    public class Image
+    public class Image : IImage
     {
         [PrimaryKey, Identity]
         public int ImageId { get; set; }
         public string OriginalFormat { get; set; }
         public byte[] ImageImage { get; set; }
     }
-    public class Data
+
+    public class Data : IData
     {
-        [PrimaryKey, Identity]
+        [PrimaryKey, Identity] 
         public int DataId { get; set; }
-        public int PostId { get; set; }
+        public int RowId { get; set; }
         public int TextId { get; set; }
         public int ImageId { get; set; }
- 
     }
- 
-    public class Post
+
+    public class Row : IRow
+    {
+        [PrimaryKey, Identity]
+        public int RowId { get; set; }
+        public int PostId { get; set; }
+    }
+
+    public class Post : IPost
     {
         [PrimaryKey, Identity]
         public int PostId { get; set; }
@@ -49,7 +56,7 @@ namespace blogBack.DB
         public string TimeStamp { get; set; }
         public int BlogId { get; set; }
     }
-    public class Blog
+    public class Blog : IBlog
     {
         [PrimaryKey, Identity]
         public int BlogId { get; set; }

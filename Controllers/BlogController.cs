@@ -1,87 +1,54 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using blogBack.DB;
+
+// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace blogBack.Controllers
 {
-    public class BlogController : Controller
+    [Route("api/[controller]")]
+    [ApiController]
+    public class BlogController : ControllerBase
     {
-        // GET: BlogController
-        public ActionResult Index()
+        private readonly Database _database;
+
+        public BlogController(Database database)
         {
-            return View();
+            _database = database;
+        }
+        // GET: api/<BlogController>
+        [HttpGet]
+        public Task<IEnumerable<Blog>> Get()
+        {
+            return null;
         }
 
-        // GET: BlogController/Details/5
-        public ActionResult Details(int id)
+        // GET api/<BlogController>/5
+        [HttpGet("{id}")]
+        public string Get(int id)
         {
-            return View();
+            return "value";
         }
 
-        // GET: BlogController/Create
-        public ActionResult Create()
-        {
-            return View();
-        }
-
-        // POST: BlogController/Create
+        // POST api/<BlogController>
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Create(IFormCollection collection)
+        public void Post([FromBody] string value)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
         }
 
-        // GET: BlogController/Edit/5
-        public ActionResult Edit(int id)
+        // PUT api/<BlogController>/5
+        [HttpPut("{id}")]
+        public void Put(int id, [FromBody] string value)
         {
-            return View();
         }
 
-        // POST: BlogController/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Edit(int id, IFormCollection collection)
+        // DELETE api/<BlogController>/5
+        [HttpDelete("{id}")]
+        public void Delete(int id)
         {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
-        }
-
-        // GET: BlogController/Delete/5
-        public ActionResult Delete(int id)
-        {
-            return View();
-        }
-
-        // POST: BlogController/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, IFormCollection collection)
-        {
-            try
-            {
-                return RedirectToAction(nameof(Index));
-            }
-            catch
-            {
-                return View();
-            }
         }
     }
 }

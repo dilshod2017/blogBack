@@ -32,7 +32,7 @@ namespace blogBack
         {
             services.AddHttpClient();
             services.AddControllers().AddJsonOptions(x=>x.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
-            services.AddSingleton<Database>();
+            (services ?? throw new ArgumentNullException(nameof(services))).AddSingleton<Database>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

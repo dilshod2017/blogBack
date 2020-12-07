@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using blogBack.DB;
+using blogBack.Repositories;
 using LinqToDB;
 
 namespace blogBack.Controllers
@@ -22,9 +23,10 @@ namespace blogBack.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<dynamic> Get()
         {
-            return _db.Posts.Select(x => x.Title);
+            var r = new Repository<Blog>(new Database());
+            return await  r.Get(new {id = 1});
         }
     }
 }
