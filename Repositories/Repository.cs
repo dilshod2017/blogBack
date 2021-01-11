@@ -1,67 +1,119 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using blogBack.DB;
 using LinqToDB;
 using LinqToDB.Data;
+using LinqToDB.Extensions;
 
 namespace blogBack.Repositories
 {
-    public class Repository<T> : AbsRepository<T> where T : class
+    public abstract class Repository<T> : IRepository<T> where T : class
     {
-        private readonly Database _database;
+        private readonly Type _type = typeof(T);
+        public async Task<int> Insert(T item) => await InsertOrUpdateAsync(item);
 
-        public Repository(Database database)
+        protected async Task<int> InsertOrUpdateAsync(T item, bool update=false)
         {
-            _database = database;
-        }
-        protected override async Task<bool> _insertAsync(T item)
-        {
-            var method = typeof(DataExtensions).GetMethod("Insert");
-            return false;
-
-        }
-
-        protected override Task<T> _removeAsync(object item)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override Task<IEnumerable<T>> _removeRangeAsync(object[] items)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected override async Task<T> _getAsync(object item)
-        {
-            try
+            using var db = new Database();
+           
+            var element = await GetAsync(x => Getelement(x, item));
+            if (element is not null)
             {
-                await using var db = new Database();
-                var itemIdProperty = item.GetType().GetProperty("id");
-                var type = typeof(T);
-                var typeId = type.GetProperty(type.Name + "Id");
-
-                var method = typeof(Database).GetMethods()
-                    .FirstOrDefault(m => m.Name == nameof(DataConnection.GetTable));
-
-                var genericMethod = method.MakeGenericMethod(type);
-                var list = await ((ITable<T>)genericMethod.Invoke(db, parameters:null)).ToListAsync();
-                var itemFmDb = list.Where(elem => (int)typeId.GetValue(elem) == (int)itemIdProperty.GetValue(item));
-                return itemFmDb.FirstOrDefault();
+                if (update)
+                {
+                    var updateMethod = typeof(DataExtensions).GetMethods()
+                        .FirstOrDefault(m => m.Name == nameof(DataExtensions.Update));
+                    var genericUpdate = updateMethod.MakeGenericMethod(_type);
+                    return (int) genericUpdate
+                        .Invoke(null, new object[] {db, item, null, null, null, null});
+                }
+                throw new Exception("Duplicated element");
             }
-            catch (Exception e)
+            var method = typeof(DataExtensions).GetMethods()
+                .FirstOrDefault(m => m.Name == nameof(DataExtensions.InsertWithInt32Identity));
+            var genericMethod = method.MakeGenericMethod(_type);
+            return (int)genericMethod
+                .Invoke(null, new object[] {db, item,null,null,null,null});
+         }
+
+        private bool Getelement(T x, T item)
+        {
+            var p = _type.GetProperties();
+            var pId = p.FirstOrDefault(x => x.Name.EndsWith("Id"));
+            if (pId is null) throw new Exception("missing field");
+            var xId = (int)pId.GetValue(x);
+            var itemId = (int)pId.GetValue(item);
+            var pp = xId == itemId;
+            return pp;
+        }
+        public async Task InsertMany(IEnumerable<T> itemList) => await InserManyAsync(itemList);
+
+        private async Task InserManyAsync(IEnumerable<T> itemList)
+        {
+            foreach (var item in itemList)
             {
-                Console.WriteLine(e);
-                throw;
+                await InsertOrUpdateAsync(item);
             }
         }
 
-        protected override Task<IEnumerable<T>> _getAllAsync()
+        public async Task<int> Update(T item) => await UpdateAsync(item);
+        protected async Task<int> UpdateAsync(T item)
+        { 
+           var returnResult = await InsertOrUpdateAsync(item, true);
+           return returnResult;
+        }
+
+        public Task UpdateMany(IEnumerable<T> itemList)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool> Remove(Func<T, bool> expression) => await RemoveAsync(expression);
+
+        protected async Task<bool> RemoveAsync(Func<T, bool> expression)
+        {
+            var item = await GetAsync(expression);
+            if (item is null) throw new Exception("Item not found");
+            using var db = new Database();
+            var method = typeof(DataExtensions).GetMethods()
+                .FirstOrDefault(m => m.Name == nameof(DataExtensions.Delete));
+            var genericMethod = method.MakeGenericMethod(_type);
+            var p = (int) genericMethod
+                .Invoke(null, new object[] {db, item, null, null, null, null});
+            return p == 1;
+        }
+
+        public async Task RemoveMany(IReadOnlyCollection<T> list) => await RemoveManyAsync(list);
+        protected async Task RemoveManyAsync(IReadOnlyCollection<T> list)
+        {
+            foreach (var item in list)
+            {
+                var name = item.GetType().Name + "Id";
+                await RemoveAsync(x=>x.GetType().Name+"Id" == name);
+            }
+        }
+
+        public async Task<T> Get(Func<T, bool> expression) => await GetAsync(expression);
+        protected async Task<T> GetAsync(Func<T, bool> expression)
+        {
+            var p = await GetManyAsync(expression);
+            return p.FirstOrDefault();
+        }
+
+        public async Task<IEnumerable<T>> GetMany(Func<T, bool> expression = null) => await GetManyAsync(expression);
+
+        protected async Task<IEnumerable<T>> GetManyAsync(Func<T, bool> expression)
+        {
+            using var db = new Database();
+            var method = typeof(DataExtensions).GetMethods()
+                .FirstOrDefault(m => m.Name == nameof(DataExtensions.GetTable));
+            var genericMethod = method.MakeGenericMethod(_type);
+            var list = await ((ITable<T>) genericMethod.Invoke(null, new object[] {db})).ToListAsync();
+            return from item in list
+                where expression == null || expression(item)
+                select item;
         }
     }
 }

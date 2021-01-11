@@ -8,7 +8,7 @@ namespace blogBack.DB
 {
     public class DbSetting : ILinqToDBSettings
     {
-        private readonly string ConnectionString;
+        private string ConnectionString { get; }
 
         public DbSetting(string connectionString)
         {
